@@ -83,10 +83,22 @@ function main()
     n_thin       = 100
     n_reps       = 8
     problems     = [
-        "diamonds-diamonds",
         "dogs-dogs",
+        "GLMM_Poisson_data-GLMM_Poisson_model",
+        "rstan_downloads-prophet",
+        "rats_data-rats_model",
+        "bones_data-bones_model",
+        "surgical_data-surgical_model",
+        "butterfly-multi_occupancy",
+        "election88-election88_full",
         "gp_pois_regr-gp_pois_regr",
         "radon_mn-radon_hierarchical_intercept_centered",
+        "uk_drivers-state_space_stochastic_level_stochastic_seasonal",
+        "three_men1-ldaK2",
+        "sat-hier_2pl",
+        "science_irt-grsm_latent_reg_irt",
+        "timssAusTwn_irt-gpcm_latent_reg_irt",
+        "hudson_lynx_hare-lotka_volterra",
     ]
     logstepsizes =
         [(logstepsize = logstepsize,) for logstepsize in range(-8, -2; step=0.25)]

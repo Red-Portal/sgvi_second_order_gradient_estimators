@@ -14,13 +14,29 @@ include("klminproxrepgraddescentgaussian.jl")
 include("klminwassfwdbwd_patch.jl")
 include("optimize_patch.jl")
 
+function LoadStanProblem(
+    post::PosteriorDB.Posterior, path::AbstractString; force::Bool=false, kwargs...
+)
+    model = PosteriorDB.model(post)
+    data = PosteriorDB.load(PosteriorDB.dataset(post), String)
+    lib = joinpath(path, "$(model.name)_model.so")
+    if isfile(lib)
+        return StanLogDensityProblems.StanProblem(lib, data; kwargs...)
+    else
+        stan_file = PosteriorDB.path(PosteriorDB.implementation(model, "stan"))
+        stan_file_new = joinpath(path, basename(stan_file))
+        cp(stan_file, stan_file_new; force=force)
+        return StanLogDensityProblems.StanProblem(stan_file_new, data; kwargs...)
+    end
+end
+
 function load_model(name)
     if !isdir(".stan")
         mkdir(".stan")
     end
     pdb = PosteriorDB.database()
     post = PosteriorDB.posterior(pdb, name)
-    prob = StanProblem(
+    prob = LoadStanProblem(
         post, ".stan/"; force=true, nan_on_error=true, make_args=["STAN_THREADS=true"]
     )
     return prob

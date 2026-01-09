@@ -78,6 +78,13 @@ function main()
     orders       = [(order = 1,), (order = 2,)]
     keys         = [(key = key,) for key in 1:n_reps]
 
+    @info("Load models")
+    @showprogress for problem in problems
+        @suppress load_model(problem)
+    end
+    @info("Load models - done")
+
+    @info("Run experiments")
     configs = Iterators.product(orders, logstepsizes, algorithms, keys) |> collect
     configs = reshape(configs, :)
     configs = map(x -> merge(x...), configs)
@@ -86,6 +93,7 @@ function main()
         fname = "data/raw/$(problem).jld2"
 
         if isfile(fname)
+            @info("File $(fname) is already present. Skipping experiment.")
             continue
         end
         dfs = @showprogress pmap(configs) do config
@@ -117,4 +125,5 @@ function main()
         df = vcat(dfs...)
         JLD2.save(fname, "data", df)
     end
+    @info("Run experiments - done")
 end

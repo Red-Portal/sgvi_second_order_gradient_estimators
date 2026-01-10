@@ -84,13 +84,13 @@ function main()
     n_reps       = 8
     problems     = [
         "dogs-dogs",
-        "GLMM_Poisson_data-GLMM_Poisson_model",
-        "rstan_downloads-prophet",
+        "surgical_data-surgical_model",
         "rats_data-rats_model",
         "bones_data-bones_model",
-        "surgical_data-surgical_model",
         "butterfly-multi_occupancy",
-        "election88-election88_full",
+        "GLMM_Poisson_data-GLMM_Poisson_model",
+        "rstan_downloads-prophet",
+        #"election88-election88_full",
         "gp_pois_regr-gp_pois_regr",
         "radon_mn-radon_hierarchical_intercept_centered",
         "uk_drivers-state_space_stochastic_level_stochastic_seasonal",

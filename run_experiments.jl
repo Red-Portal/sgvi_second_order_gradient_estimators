@@ -89,16 +89,20 @@ function main()
         "bones_data-bones_model",
         "butterfly-multi_occupancy",
         "GLMM_Poisson_data-GLMM_Poisson_model",
-        "rstan_downloads-prophet",
+        "pilots-pilots",
+        "nes2000-nes",
         #"election88-election88_full",
+        "hudson_lynx_hare-lotka_volterra",
+        "loss_curves-losscurve_sislob",
         "gp_pois_regr-gp_pois_regr",
-        "radon_mn-radon_hierarchical_intercept_centered",
+        "rstan_downloads-prophet",
+        "bball_drive_event_1-hmm_drive_1",
         "uk_drivers-state_space_stochastic_level_stochastic_seasonal",
+        "radon_mn-radon_hierarchical_intercept_centered",
         "three_men1-ldaK2",
         "sat-hier_2pl",
         "science_irt-grsm_latent_reg_irt",
         "timssAusTwn_irt-gpcm_latent_reg_irt",
-        "hudson_lynx_hare-lotka_volterra",
     ]
     logstepsizes =
         [(logstepsize = logstepsize,) for logstepsize in range(-8, -2; step=0.25)]
@@ -131,9 +135,9 @@ function main()
             Random123.set_counter!(rng_local, key)
             
             alg = if algorithm == "WVI"
-                KLMinWassFwdBwd(; n_samples=1, stepsize=10^logstepsize)
+                KLMinWassFwdBwd(; n_samples=8, stepsize=10^logstepsize)
             else
-                KLMinProxRepGradDescentGaussian(; n_samples=1, stepsize=10^logstepsize)
+                KLMinProxRepGradDescentGaussian(; n_samples=8, stepsize=10^logstepsize)
             end
 
             xs, ts, ys = run_experiment(rng, problem, order, alg, n_iters, n_thin)

@@ -5,12 +5,11 @@
 #SBATCH --ntasks=4
 #SBATCH --gpus=0
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=256G
+#SBATCH --mem=128G
 #SBATCH --time=00:05:00
 #SBATCH --qos=normal
 
 using Distributed, SlurmClusterManager
-
 
 addprocs(SlurmManager())
 @everywhere using Pkg

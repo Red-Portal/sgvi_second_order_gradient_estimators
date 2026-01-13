@@ -12,11 +12,11 @@
 using Serialization
 using Distributed, SlurmClusterManager
 
-rootdir = @__DIR__
+ENV["PATH"] = @__DIR__
 
-addprocs(SlurmManager(), dir=rootdir)
+addprocs(SlurmManager())
 
 @everywhere using Pkg
-@everywhere Pkg.activate(rootdir)
-@everywhere include(joinpath(rootdir, "run_experiments.jl"))
+@everywhere Pkg.activate(ENV["PATH"])
+@everywhere include(joinpath(ENV["PATH"], "run_experiments.jl"))
 main()

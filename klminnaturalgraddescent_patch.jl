@@ -7,20 +7,25 @@ using AdvancedVI:
     gaussian_expectation_gradient_and_hessian!,
     step,
     subsample,
-    KLMinWassFwdBwdState,
-    KLMinWassFwdBwd
+    KLMinNaturalGradDescentState,
+    KLMinNaturalGradDescent
 using LinearAlgebra
 using Random
 using Statistics
 
 function AdvancedVI.step(
-    rng::Random.AbstractRNG, alg::KLMinWassFwdBwd, state, callback, objargs...; kwargs...
+    rng::Random.AbstractRNG,
+    alg::KLMinNaturalGradDescent,
+    state,
+    callback,
+    objargs...;
+    kwargs...,
 )
-    (; n_samples, stepsize, subsampling) = alg
-    (; q, prob, sigma, iteration, sub_st, grad_buf, hess_buf) = state
+    (; ensure_posdef, n_samples, stepsize, subsampling) = alg
+    (; q, prob, prec, qcov, iteration, sub_st, grad_buf, hess_buf) = state
 
     m = mean(q)
-    Σ = sigma
+    S = prec
     η = convert(eltype(m), stepsize)
     iteration += 1
 
@@ -33,20 +38,31 @@ function AdvancedVI.step(
         prob_sub, sub_st′, sub_inf
     end
 
-    # Estimate the Wasserstein gradient
     logπ_avg, grad_buf, hess_buf = gaussian_expectation_gradient_and_hessian!(
         rng, q, n_samples, grad_buf, hess_buf, prob_sub
     )
 
-    m′ = m - η * (-grad_buf)
-    M = I - η * (-hess_buf')
-    Σ_half = Hermitian(M*Σ*M')
+    S′ = if ensure_posdef
+        # Udpate rule guaranteeing positive definiteness in the proof of Theorem 1.
+        # Lin, W., Schmidt, M., & Khan, M. E.
+        # Handling the positive-definite constraint in the Bayesian learning rule.
+        # In ICML 2020.
+        G_hat = S - -hess_buf
+        Hermitian(S - η*G_hat + η^2/2*G_hat*qcov*G_hat)
+    else
+        Hermitian(((1 - η) * S + η * Symmetric(-hess_buf)))
+    end
+    m′ = m - η * (S′ \ (-grad_buf))
 
-    # Compute the JKO proximal operator
-    Σ′ = (Σ_half + 2*η*I + sqrt(Hermitian(Σ_half*(Σ_half + 4*η*I))))/2
-    q′ = MvLocationScale(m′, cholesky(Σ′).L, q.dist)
+    prec_chol = cholesky(S′).L
+    prec_chol_inv = inv(prec_chol)
+    scale = prec_chol_inv'
+    qcov = Hermitian(scale*scale')
+    q′ = MvLocationScale(m′, scale, q.dist)
 
-    state = KLMinWassFwdBwdState(q′, prob, Σ′, iteration, sub_st′, grad_buf, hess_buf)
+    state = KLMinNaturalGradDescentState(
+        q′, prob, S′, qcov, iteration, sub_st′, grad_buf, hess_buf
+    )
     elbo = logπ_avg + entropy(q′)
     info = merge((elbo=elbo,), sub_inf)
 

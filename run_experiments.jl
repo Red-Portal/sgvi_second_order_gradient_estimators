@@ -50,7 +50,7 @@ function run_experiment(rng, prob_name, order, alg, n_iters, n_thin)
 
     t_begin = time()
     function callback(; rng, iteration, q, kwargs...)
-        if (mod(iteration, n_thin) == 1) || (iteration == n_iters)
+        if iteration == 1 || (mod(iteration, n_thin) == 0)
             elbo =
                 -estimate_objective(
                     rng, RepGradELBO(2^10; entropy=MonteCarloEntropy()), q, prob
@@ -79,21 +79,20 @@ function main()
     seed = (0x97dcb950eaebcfba, 0x741d36b68bef6415)
     rng = Random123.Philox4x(UInt64, seed, 8)
 
-    n_iters      = 5000
+    n_iters      = 5001
     n_thin       = 100
-    n_reps       = 8
+    n_reps       = 32
     problems     = [
         "dogs-dogs",
-        "surgical_data-surgical_model",
         "rats_data-rats_model",
         "bones_data-bones_model",
         "butterfly-multi_occupancy",
-        "GLMM_Poisson_data-GLMM_Poisson_model",
         "pilots-pilots",
         "nes2000-nes",
         #"election88-election88_full",
         "hudson_lynx_hare-lotka_volterra",
         "loss_curves-losscurve_sislob",
+        "GLMM_data-GLMM1_model"
         "gp_pois_regr-gp_pois_regr",
         "rstan_downloads-prophet",
         "bball_drive_event_1-hmm_drive_1",
@@ -105,8 +104,8 @@ function main()
         "timssAusTwn_irt-gpcm_latent_reg_irt",
     ]
     logstepsizes =
-        [(logstepsize = logstepsize,) for logstepsize in range(-8, -2; step=0.25)]
-    algorithms   = [(algorithm = "WVI",), (algorithm = "BBVI",),]
+        [(logstepsize = logstepsize,) for logstepsize in range(-8, 0; step=0.125)]
+    algorithms   = [(algorithm = "WVI",), (algorithm = "BBVI",), (algorithm = "NGVI",)]
     orders       = [(order = 1,), (order = 2,)]
     keys         = [(key = key,) for key in 1:n_reps]
 
@@ -136,8 +135,10 @@ function main()
             
             alg = if algorithm == "WVI"
                 KLMinWassFwdBwd(; n_samples=8, stepsize=10^logstepsize)
-            else
+            elseif algorithm == "BBVI"
                 KLMinProxRepGradDescentGaussian(; n_samples=8, stepsize=10^logstepsize)
+            elseif algorithm == "NGVI"
+                KLMinNaturalGradDescent(; n_samples=8, stepsize=10^logstepsize)
             end
 
             xs, ts, ys = run_experiment(rng, problem, order, alg, n_iters, n_thin)

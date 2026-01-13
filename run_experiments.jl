@@ -92,7 +92,7 @@ function main()
         #"election88-election88_full",
         "hudson_lynx_hare-lotka_volterra",
         "loss_curves-losscurve_sislob",
-        "GLMM_data-GLMM1_model"
+        "GLMM_data-GLMM1_model",
         "gp_pois_regr-gp_pois_regr",
         "rstan_downloads-prophet",
         "bball_drive_event_1-hmm_drive_1",

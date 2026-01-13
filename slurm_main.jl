@@ -9,11 +9,15 @@
 #SBATCH --time=00:05:00
 #SBATCH --qos=normal
 
+using Serialization
 using Distributed, SlurmClusterManager
 
-addprocs(SlurmManager())
+rootdir = @__DIR__
+
+addprocs(SlurmManager(), topology=:master_worker, dir=rootdir)
+
 @everywhere using Pkg
 @everywhere Pkg.activate(".")
-@everywhere include("run_experiments.jl")
 
+include("run_experiments.jl")
 main()

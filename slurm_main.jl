@@ -12,9 +12,9 @@
 using Serialization
 using Distributed, SlurmClusterManager
 
-addprocs(SlurmManager(), dir=ENV["SLURM_SUBMIT_DIR"])
+addprocs(SlurmManager())
 
-cd(ENV["SLURM_SUBMIT_DIR"])
+@everywhere cd(ENV["SLURM_SUBMIT_DIR"])
 @everywhere using Pkg
 @everywhere Pkg.activate(".")
 @everywhere include("run_experiments.jl")

@@ -14,10 +14,9 @@ using Distributed, SlurmClusterManager
 
 rootdir = @__DIR__
 
-addprocs(SlurmManager(), topology=:master_worker, dir=rootdir)
+addprocs(SlurmManager(), dir=rootdir)
 
 @everywhere using Pkg
-@everywhere Pkg.activate(".")
-
-include("run_experiments.jl")
+@everywhere Pkg.activate(rootdir)
+@everywhere include(joinpath(rootdir, "run_experiments.jl"))
 main()

@@ -79,9 +79,9 @@ function main()
     seed = (0x97dcb950eaebcfba, 0x741d36b68bef6415)
     rng = Random123.Philox4x(UInt64, seed, 8)
 
-    n_iters      = 5001
+    n_iters      = 4001
     n_thin       = 100
-    n_reps       = 32
+    n_reps       = 16
     problems     = [
         "dogs-dogs",
         "rats_data-rats_model",
@@ -104,7 +104,7 @@ function main()
         "timssAusTwn_irt-gpcm_latent_reg_irt",
     ]
     logstepsizes =
-        [(logstepsize = logstepsize,) for logstepsize in range(-8, 0; step=0.125)]
+        [(logstepsize = logstepsize,) for logstepsize in range(-8, 0; step=0.2)]
     algorithms   = [(algorithm = "WVI",), (algorithm = "BBVI",), (algorithm = "NGVI",)]
     orders       = [(order = 1,), (order = 2,)]
     keys         = [(key = key,) for key in 1:n_reps]
@@ -134,11 +134,11 @@ function main()
             Random123.set_counter!(rng_local, key)
             
             alg = if algorithm == "WVI"
-                KLMinWassFwdBwd(; n_samples=8, stepsize=10^logstepsize)
+                KLMinWassFwdBwd(; n_samples=4, stepsize=10^logstepsize)
             elseif algorithm == "BBVI"
-                KLMinProxRepGradDescentGaussian(; n_samples=8, stepsize=10^logstepsize)
+                KLMinProxRepGradDescentGaussian(; n_samples=4, stepsize=10^logstepsize)
             elseif algorithm == "NGVI"
-                KLMinNaturalGradDescent(; n_samples=8, stepsize=10^logstepsize)
+                KLMinNaturalGradDescent(; n_samples=4, stepsize=10^logstepsize)
             end
 
             xs, ts, ys = run_experiment(rng, problem, order, alg, n_iters, n_thin)

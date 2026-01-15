@@ -50,7 +50,7 @@ function run_experiment(rng, prob_name, order, alg, n_iters, n_thin)
 
     t_begin = time()
     function callback(; rng, iteration, q, kwargs...)
-        if iteration == 1 || (mod(iteration, n_thin) == 0)
+        if mod(iteration, n_thin) == 1
             elbo =
                 -estimate_objective(
                     rng, RepGradELBO(2^12; entropy=MonteCarloEntropy()), q, prob

@@ -53,7 +53,7 @@ function run_experiment(rng, prob_name, order, alg, n_iters, n_thin)
         if iteration == 1 || (mod(iteration, n_thin) == 0)
             elbo =
                 -estimate_objective(
-                    rng, RepGradELBO(2^10; entropy=MonteCarloEntropy()), q, prob
+                    rng, RepGradELBO(2^12; entropy=MonteCarloEntropy()), q, prob
                 )
             return (elbo_avg=elbo, elapsed=time() - t_begin)
         else
@@ -134,9 +134,9 @@ function main()
             Random123.set_counter!(rng_local, key)
             
             alg = if algorithm == "WVI"
-                KLMinWassFwdBwd(; n_samples=4, stepsize=10^logstepsize)
+                KLMinWassFwdBwd(; n_samples=8, stepsize=10^logstepsize)
             elseif algorithm == "BBVI"
-                KLMinProxRepGradDescentGaussian(; n_samples=4, stepsize=10^logstepsize)
+                KLMinProxRepGradDescentGaussian(; n_samples=8, stepsize=10^logstepsize)
             elseif algorithm == "NGVI"
                 KLMinNaturalGradDescent(; n_samples=4, stepsize=10^logstepsize)
             end

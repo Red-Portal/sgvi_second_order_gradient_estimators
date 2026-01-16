@@ -155,6 +155,10 @@ function AdvancedVI.step(
     elbo = logπ_avg + entropy(q′)
     info = merge((elbo=elbo,), sub_inf)
 
+    if !isfinite(elbo)
+        throw(ErrorException("Optimization diverged"))
+    end
+
     if !isnothing(callback)
         info′ = callback(; rng, iteration, q=q′, info)
         info = !isnothing(info′) ? merge(info′, info) : info

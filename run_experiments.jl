@@ -67,7 +67,10 @@ function run_experiment(rng, prob_name, order, alg, n_iters, n_thin)
         ts = [i.elapsed for i in info[xs]]
         ys = [i.elbo_avg for i in info[xs]]
         return xs, ts, ys
-    catch 
+    catch e 
+        if !(e isa Union{<:ArgumentError, <:PosDefException, <:ErrorException, <:SingularException})
+            throw(e)
+        end
         xs = 1:n_thin:n_iters
         ts = fill(0.0, length(xs))
         ys = fill(-Inf, length(xs))

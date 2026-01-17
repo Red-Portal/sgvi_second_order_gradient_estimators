@@ -82,7 +82,7 @@ function main()
     seed = (0x97dcb950eaebcfba, 0x741d36b68bef6415)
     rng = Random123.Philox4x(UInt64, seed, 8)
 
-    n_iters      = 4001
+    n_iters      = 8001
     n_thin       = 100
     n_reps       = 32
     problems     = [

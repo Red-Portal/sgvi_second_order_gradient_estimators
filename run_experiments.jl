@@ -84,7 +84,7 @@ function main()
 
     n_iters      = 4001
     n_thin       = 100
-    n_reps       = 16
+    n_reps       = 32
     problems     = [
         "dogs-dogs",
         "rats_data-rats_model",
@@ -107,7 +107,7 @@ function main()
         "timssAusTwn_irt-gpcm_latent_reg_irt",
     ]
     logstepsizes =
-        [(logstepsize = logstepsize,) for logstepsize in range(-8, 0; step=0.2)]
+        [(logstepsize = logstepsize,) for logstepsize in range(-8, 0; step=0.125)]
     algorithms   = [(algorithm = "WVI",), (algorithm = "BBVI",), (algorithm = "NGVI",)]
     orders       = [(order = 1,), (order = 2,)]
     keys         = [(key = key,) for key in 1:n_reps]

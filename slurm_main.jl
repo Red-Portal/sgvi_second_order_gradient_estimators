@@ -13,8 +13,6 @@ addprocs(num_cpus; exeflags)
 
 @info("Setting up paths")
 @everywhere cd(ENV["SLURM_SUBMIT_DIR"])
-@everywhere using Pkg
-@everywhere Pkg.activate(".")
 @info("Setting up paths - done")
 
 @info("Loading main script")

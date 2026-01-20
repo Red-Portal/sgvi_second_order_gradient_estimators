@@ -18,8 +18,8 @@ function statistics(df, group_key, statistic = :elbo)
                 confint(bootstrap(mean, $statistic, BalancedSampling(1024)), BCaConfInt(0.95))
 	)
         @transform(
-            $"$(statistic)_up" = first.(only.($"$(statistic)_boot")),
-            $"$(statistic)_lo" = last.(only.($"$(statistic)_boot"))
+            $"$(statistic)_up" = getindex.(only.($"$(statistic)_boot"), 3),
+            $"$(statistic)_lo" = getindex.(only.($"$(statistic)_boot"), 2)
         )
     end
 end
@@ -101,42 +101,45 @@ end
 function export_envelopes()
     problems     = [
         #"diamonds-diamonds",
-        ("dogs-dogs", 1000),
-        ("bones_data-bones_model", 2000),
-        ("rats_data-rats_model", 4000),
-        ("surgical_data-surgical_model", 4000),
-        ("GLMM_Poisson_data-GLMM_Poisson_model", 4000),
-        ("nes2000-nes", 4000),
-        ("pilots-pilots", 4000),
-        ("butterfly-multi_occupancy", 4000),
-        ("hudson_lynx_hare-lotka_volterra", 4000),
-        ("loss_curves-losscurve_sislob", 4000),
-        ("rstan_downloads-prophet", 4000),
-        ("gp_pois_regr-gp_pois_regr", 4000),
-        ("bball_drive_event_1-hmm_drive_1", 4000),
+        "dogs-dogs",
+        "rats_data-rats_model",
+        "bones_data-bones_model",
+        "rats_data-rats_model",
+        #("surgical_data-surgical_model",
+        "GLMM_data-GLMM1_model",
+        "nes2000-nes",
+        "pilots-pilots",
+        "butterfly-multi_occupancy",
+        "hudson_lynx_hare-lotka_volterra",
+        "loss_curves-losscurve_sislob",
+        #"rstan_downloads-prophet",
+        "gp_pois_regr-gp_pois_regr",
+        "bball_drive_event_1-hmm_drive_1",
     ]
     make_finite(x) = isfinite(x) ? x : -10e+10
 
-    for (problem, iteration) in problems
-        iteration_aligned = iteration + 1
+    for problem in problems
 
         h5open("data/pro/envelopes_$(problem).h5", "w") do h5
-            df = JLD2.load("data/raw/$(problem).jld2", "data")
-            df = @transform(df, :elbo = make_finite.(:elbo))
+            for iteration in [1000, 2000, 4000]
+                iteration_aligned = iteration + 1
+                df = JLD2.load("data/raw/$(problem).jld2", "data")
+                df = @transform(df, :elbo = make_finite.(:elbo))
 
-            for order in [1, 2], algorithm in ["WVI", "BBVI"]
-                df_sub = @subset(
-                    df,
-                    :algorithm .== algorithm,
-                    :order     .== order,
-                    :problem   .== problem
-                )
-                display(df_sub)
-        
-                x, y, y_p, y_m = plot_envelope(df_sub, iteration_aligned; show_plot=false)
+                for order in [1, 2], algorithm in ["WVI", "BBVI", "NGVI"]
+                    df_sub = @subset(
+                        df,
+                        :algorithm .== algorithm,
+                        :order     .== order,
+                        :problem   .== problem
+                    )
+                    display(df_sub)
 
-                write(h5, "x_$(algorithm)_$(order)", x)
-                write(h5, "y_$(algorithm)_$(order)", hcat(y, y_p, y_m)' |> Array)
+                    x, y, y_p, y_m = plot_envelope(df_sub, iteration_aligned; show_plot=false)
+
+                    write(h5, "x_$(algorithm)_$(order)_$(iteration)", x)
+                    write(h5, "y_$(algorithm)_$(order)_$(iteration)", hcat(y, y_p, y_m)' |> Array)
+                end
             end
         end
     end

@@ -68,7 +68,7 @@ function run_experiment(rng, prob_name, order, alg, n_iters, n_thin)
         ys = [i.elbo_avg for i in info[xs]]
         return xs, ts, ys
     catch e 
-        if !(e isa Union{<:ArgumentError, <:PosDefException, <:ErrorException, <:SingularException})
+        if !(e isa Union{<:ArgumentError, <:PosDefException, <:ErrorException, <:SingularException,<:LAPACKException})
             throw(e)
         end
         xs = 1:n_thin:n_iters
@@ -92,6 +92,7 @@ function main()
         "butterfly-multi_occupancy",
         "pilots-pilots",
         "nes2000-nes",
+        "nes_logit_data-nes_logit_model",
         #"election88-election88_full",
         "hudson_lynx_hare-lotka_volterra",
         "loss_curves-losscurve_sislob",

@@ -104,24 +104,23 @@ function export_envelopes()
         "dogs-dogs",
         "rats_data-rats_model",
         "bones_data-bones_model",
-        "rats_data-rats_model",
-        #("surgical_data-surgical_model",
         "GLMM_data-GLMM1_model",
         "nes2000-nes",
         "pilots-pilots",
         "butterfly-multi_occupancy",
         "hudson_lynx_hare-lotka_volterra",
         "loss_curves-losscurve_sislob",
-        #"rstan_downloads-prophet",
+        "rstan_downloads-prophet",
         "gp_pois_regr-gp_pois_regr",
         "bball_drive_event_1-hmm_drive_1",
+        "radon_mn-radon_hierarchical_intercept_centered",
     ]
     make_finite(x) = isfinite(x) ? x : -10e+10
 
     for problem in problems
-
+        @info(problem)
         h5open("data/pro/envelopes_$(problem).h5", "w") do h5
-            for iteration in [1000, 2000, 4000]
+            for iteration in [1000, 2000, 4000, 6000, 8000, 10000]
                 iteration_aligned = iteration + 1
                 df = JLD2.load("data/raw/$(problem).jld2", "data")
                 df = @transform(df, :elbo = make_finite.(:elbo))

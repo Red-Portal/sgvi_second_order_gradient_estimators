@@ -3,9 +3,7 @@
 
 This repo contains the code for replicating the experimental results in the paper:
 
-> Stochastic Gradient Variational Inference with 
-> Second-Order Gradient Estimators 
-> from Bures-Wasserstein to Parameter Space
+> Stochastic Gradient Variational Inference with Second-Order Gradient Estimators from Bures-Wasserstein to Parameter Space
 
 ## Installation
 

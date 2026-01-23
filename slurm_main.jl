@@ -26,18 +26,17 @@ function main()
     n_iters      = 10001
     n_thin       = 100
     n_reps       = 32
-    logstepsizes =
-        [(logstepsize = logstepsize,) for logstepsize in range(-8, 0; step=0.125)]
-    algorithms   = [(algorithm = "WVI",), (algorithm = "BBVI",), (algorithm = "NGVI",)]
-    orders       = [(order = 1,), (order = 2,)]
-    keys         = [(key = key,) for key in 1:n_reps]
+    logstepsizes = [(logstepsize=logstepsize,) for logstepsize in range(-8, 0; step=0.125)]
+    algorithms   = [(algorithm="WVI",), (algorithm="BBVI",), (algorithm="NGVI",)]
+    orders       = [(order=1,), (order=2,)]
+    keys         = [(key=key,) for key in 1:n_reps]
 
     @info("Load models")
     @suppress load_model(problem)
     @info("Load models - done")
 
     @info("Run experiments")
-    configs = Iterators.product(orders, logstepsizes, algorithms, keys) |> collect
+    configs = collect(Iterators.product(orders, logstepsizes, algorithms, keys))
     configs = reshape(configs, :)
     configs = map(x -> merge(x...), configs)
 
@@ -45,14 +44,14 @@ function main()
 
     if isfile(fname)
         @info("File $(fname) is already present. Skipping experiment.")
-        return
+        return nothing
     end
     dfs = @showprogress pmap(configs) do config
         (; key, logstepsize, algorithm, order) = config
 
         rng_local = deepcopy(rng)
         Random123.set_counter!(rng_local, key)
-            
+
         alg = if algorithm == "WVI"
             KLMinWassFwdBwd(; n_samples=8, stepsize=10^logstepsize)
         elseif algorithm == "BBVI"
@@ -70,7 +69,7 @@ function main()
             algorithm=algorithm,
             order=order,
             problem=problem,
-            logstepsize=logstepsize
+            logstepsize=logstepsize,
         )
         GC.gc()
         df

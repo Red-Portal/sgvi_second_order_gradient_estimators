@@ -67,8 +67,16 @@ function run_experiment(rng, prob_name, order, alg, n_iters, n_thin)
         ts = [i.elapsed for i in info[xs]]
         ys = [i.elbo_avg for i in info[xs]]
         return xs, ts, ys
-    catch e 
-        if !(e isa Union{<:ArgumentError, <:PosDefException, <:ErrorException, <:SingularException,<:LAPACKException})
+    catch e
+        if !(
+            e isa Union{
+                <:ArgumentError,
+                <:PosDefException,
+                <:ErrorException,
+                <:SingularException,
+                <:LAPACKException,
+            }
+        )
             throw(e)
         end
         xs = 1:n_thin:n_iters
@@ -85,33 +93,12 @@ function main()
     n_iters      = 8001
     n_thin       = 100
     n_reps       = 32
-    problems     = [
-        "dogs-dogs",
-        "rats_data-rats_model",
-        "bones_data-bones_model",
-        "butterfly-multi_occupancy",
-        "pilots-pilots",
-        "nes2000-nes",
-        "nes_logit_data-nes_logit_model",
-        #"election88-election88_full",
-        "hudson_lynx_hare-lotka_volterra",
-        "loss_curves-losscurve_sislob",
-        "GLMM_data-GLMM1_model",
-        "gp_pois_regr-gp_pois_regr",
-        "rstan_downloads-prophet",
-        "bball_drive_event_1-hmm_drive_1",
-        "uk_drivers-state_space_stochastic_level_stochastic_seasonal",
-        "radon_mn-radon_hierarchical_intercept_centered",
-        "three_men1-ldaK2",
-        "sat-hier_2pl",
-        "science_irt-grsm_latent_reg_irt",
-        "timssAusTwn_irt-gpcm_latent_reg_irt",
-    ]
-    logstepsizes =
-        [(logstepsize = logstepsize,) for logstepsize in range(-8, 0; step=0.125)]
-    algorithms   = [(algorithm = "WVI",), (algorithm = "BBVI",), (algorithm = "NGVI",)]
-    orders       = [(order = 1,), (order = 2,)]
-    keys         = [(key = key,) for key in 1:n_reps]
+    problems     = ["dogs-dogs", "rats_data-rats_model", "bones_data-bones_model", "butterfly-multi_occupancy", "pilots-pilots", "nes2000-nes", "nes_logit_data-nes_logit_model",     #"election88-election88_full",
+    "hudson_lynx_hare-lotka_volterra", "loss_curves-losscurve_sislob", "GLMM_data-GLMM1_model", "gp_pois_regr-gp_pois_regr", "rstan_downloads-prophet", "bball_drive_event_1-hmm_drive_1", "uk_drivers-state_space_stochastic_level_stochastic_seasonal", "radon_mn-radon_hierarchical_intercept_centered", "three_men1-ldaK2", "sat-hier_2pl", "science_irt-grsm_latent_reg_irt", "timssAusTwn_irt-gpcm_latent_reg_irt"]
+    logstepsizes = [(logstepsize=logstepsize,) for logstepsize in range(-8, 0; step=0.125)]
+    algorithms   = [(algorithm="WVI",), (algorithm="BBVI",), (algorithm="NGVI",)]
+    orders       = [(order=1,), (order=2,)]
+    keys         = [(key=key,) for key in 1:n_reps]
 
     @info("Load models")
     @showprogress for problem in problems
@@ -120,7 +107,7 @@ function main()
     @info("Load models - done")
 
     @info("Run experiments")
-    configs = Iterators.product(orders, logstepsizes, algorithms, keys) |> collect
+    configs = collect(Iterators.product(orders, logstepsizes, algorithms, keys))
     configs = reshape(configs, :)
     configs = map(x -> merge(x...), configs)
 
@@ -136,7 +123,7 @@ function main()
 
             rng_local = deepcopy(rng)
             Random123.set_counter!(rng_local, key)
-            
+
             alg = if algorithm == "WVI"
                 KLMinWassFwdBwd(; n_samples=8, stepsize=10^logstepsize)
             elseif algorithm == "BBVI"
@@ -154,7 +141,7 @@ function main()
                 algorithm=algorithm,
                 order=order,
                 problem=problem,
-                logstepsize=logstepsize
+                logstepsize=logstepsize,
             )
             GC.gc()
             df

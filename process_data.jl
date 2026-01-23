@@ -7,16 +7,15 @@ using JLD2
 using Plots, StatsPlots
 using Statistics
 
-function statistics(df, group_key, statistic = :elbo)
+function statistics(df, group_key, statistic=:elbo)
     @chain groupby(df, group_key) begin
         @combine(
             $"$(statistic)_mean"   = mean($statistic),
             $"$(statistic)_median" = median($statistic),
-	    $"$(statistic)_min"    = minimum($statistic),
-	    $"$(statistic)_max"    = maximum($statistic),
-            $"$(statistic)_boot"   =
-                confint(bootstrap(mean, $statistic, BalancedSampling(1024)), BCaConfInt(0.95))
-	)
+            $"$(statistic)_min"    = minimum($statistic),
+            $"$(statistic)_max"    = maximum($statistic),
+            $"$(statistic)_boot"   = confint(bootstrap(mean, $statistic, BalancedSampling(1024)), BCaConfInt(0.95))
+        )
         @transform(
             $"$(statistic)_up" = getindex.(only.($"$(statistic)_boot"), 3),
             $"$(statistic)_lo" = getindex.(only.($"$(statistic)_boot"), 2)
@@ -25,17 +24,21 @@ function statistics(df, group_key, statistic = :elbo)
 end
 
 function plot_curve(df, logstepsize; show_plot=true)
-    df = @chain df begin
+    df       = @chain df begin
         @subset(:logstepsize .== logstepsize)
-	@select(:elbo, :iteration)
+        @select(:elbo, :iteration)
     end
-    x        = df[:,:iteration] |> Array{Int}
+    x        = Array{Int}(df[:, :iteration])
     df_stats = statistics(df, :iteration, :elbo)
-    y        = df_stats[:,Symbol("elbo_mean")]
-    y_p      = abs.(df_stats[:,Symbol("elbo_up")] - y)
-    y_m      = abs.(df_stats[:,Symbol("elbo_lo")] - y)
+    y        = df_stats[:, Symbol("elbo_mean")]
+    y_p      = abs.(df_stats[:, Symbol("elbo_up")] - y)
+    y_m      = abs.(df_stats[:, Symbol("elbo_lo")] - y)
     if show_plot
-        display(Plots.plot!(x, y, xscale=:log10, ylims=(quantile(y, 0.5), Inf), ribbon=(y_m, y_p)))
+        display(
+            Plots.plot!(
+                x, y; xscale=:log10, ylims=(quantile(y, 0.5), Inf), ribbon=(y_m, y_p)
+            ),
+        )
     end
     x, y, y_p, y_m
 end
@@ -43,37 +46,41 @@ end
 function plot_envelope(df, iteration; show_plot=true)
     df = @chain df begin
         @subset(:iteration .== iteration)
-	@select(:elbo, :logstepsize)
+        @select(:elbo, :logstepsize)
     end
 
-    x        = df[:,:logstepsize] |> Array{Float64}
+    x        = Array{Float64}(df[:, :logstepsize])
     df_stats = statistics(df, :logstepsize, :elbo)
-    x        = 10.0.^(df_stats[:,:logstepsize])
-    y        = df_stats[:,Symbol("elbo_mean")]
-    y_p      = abs.(df_stats[:,Symbol("elbo_up")] - y)
-    y_m      = abs.(df_stats[:,Symbol("elbo_lo")] - y)
+    x        = 10.0 .^ (df_stats[:, :logstepsize])
+    y        = df_stats[:, Symbol("elbo_mean")]
+    y_p      = abs.(df_stats[:, Symbol("elbo_up")] - y)
+    y_m      = abs.(df_stats[:, Symbol("elbo_lo")] - y)
     if show_plot
-        display(Plots.plot!(x, y, xscale=:log10, ylims=(quantile(y, 0.5), Inf), ribbon=(y_m, y_p)))
+        display(
+            Plots.plot!(
+                x, y; xscale=:log10, ylims=(quantile(y, 0.5), Inf), ribbon=(y_m, y_p)
+            ),
+        )
     end
     x, y, y_p, y_m
 end
 
 function export_curves()
-    problems     = [
-        #"diamonds-diamonds",
+    problems = [
+    #"diamonds-diamonds",
         ("dogs-dogs", -4),
-        # ("bones_data-bones_model", 2000),
-        # ("rats_data-rats_model", 4000),
-        # ("surgical_data-surgical_model", 4000),
-        # ("GLMM_Poisson_data-GLMM_Poisson_model", 4000),
-        # ("nes2000-nes", 4000),
-        # ("pilots-pilots", 4000),
-        # ("butterfly-multi_occupancy", 4000),
-        # ("hudson_lynx_hare-lotka_volterra", 4000),
-        # ("loss_curves-losscurve_sislob", 4000),
-        # ("rstan_downloads-prophet", 4000),
-        # ("gp_pois_regr-gp_pois_regr", 4000),
-        # ("bball_drive_event_1-hmm_drive_1", 4000),
+    # ("bones_data-bones_model", 2000),
+    # ("rats_data-rats_model", 4000),
+    # ("surgical_data-surgical_model", 4000),
+    # ("GLMM_Poisson_data-GLMM_Poisson_model", 4000),
+    # ("nes2000-nes", 4000),
+    # ("pilots-pilots", 4000),
+    # ("butterfly-multi_occupancy", 4000),
+    # ("hudson_lynx_hare-lotka_volterra", 4000),
+    # ("loss_curves-losscurve_sislob", 4000),
+    # ("rstan_downloads-prophet", 4000),
+    # ("gp_pois_regr-gp_pois_regr", 4000),
+    # ("bball_drive_event_1-hmm_drive_1", 4000),
     ]
 
     for (problem, logstepsize) in problems
@@ -82,24 +89,21 @@ function export_curves()
 
             for order in [1, 2], algorithm in ["WVI", "BBVI"]
                 df_sub = @subset(
-                    df,
-                    :algorithm .== algorithm,
-                    :order     .== order,
-                    :problem   .== problem
+                    df, :algorithm .== algorithm, :order .== order, :problem .== problem
                 )
                 display(df_sub)
-        
+
                 x, y, y_p, y_m = plot_curve(df_sub, logstepsize; show_plot=false)
 
                 write(h5, "x_$(algorithm)_$(order)", x)
-                write(h5, "y_$(algorithm)_$(order)", hcat(y, y_p, y_m)' |> Array)
+                write(h5, "y_$(algorithm)_$(order)", Array(hcat(y, y_p, y_m)'))
             end
         end
     end
 end
 
 function export_envelopes()
-    problems     = [
+    problems = [
         #"diamonds-diamonds",
         "dogs-dogs",
         "rats_data-rats_model",
@@ -127,17 +131,20 @@ function export_envelopes()
 
                 for order in [1, 2], algorithm in ["WVI", "BBVI", "NGVI"]
                     df_sub = @subset(
-                        df,
-                        :algorithm .== algorithm,
-                        :order     .== order,
-                        :problem   .== problem
+                        df, :algorithm .== algorithm, :order .== order, :problem .== problem
                     )
                     display(df_sub)
 
-                    x, y, y_p, y_m = plot_envelope(df_sub, iteration_aligned; show_plot=false)
+                    x, y, y_p, y_m = plot_envelope(
+                        df_sub, iteration_aligned; show_plot=false
+                    )
 
                     write(h5, "x_$(algorithm)_$(order)_$(iteration)", x)
-                    write(h5, "y_$(algorithm)_$(order)_$(iteration)", hcat(y, y_p, y_m)' |> Array)
+                    write(
+                        h5,
+                        "y_$(algorithm)_$(order)_$(iteration)",
+                        Array(hcat(y, y_p, y_m)'),
+                    )
                 end
             end
         end
@@ -145,7 +152,7 @@ function export_envelopes()
 end
 
 function main()
-    problems     = [
+    problems = [
         #"diamonds-diamonds",
         "dogs-dogs",
         #"gp_pois_regr-gp_pois_regr",
@@ -156,16 +163,11 @@ function main()
     df = JLD2.load("data/raw/$(problem).jld2", "data")
 
     make_finite(x) = isfinite(x) ? x : -10e+10
-    df   = @transform(df, :elbo = make_finite.(:elbo))
+    df = @transform(df, :elbo = make_finite.(:elbo))
 
     iteration = 1000 - 99
 
-    df_sub = @subset(
-        df,
-        :algorithm .== "WVI",
-        :order     .== 1,
-        :problem   .== problem
-    )
+    df_sub = @subset(df, :algorithm .== "WVI", :order .== 1, :problem .== problem)
     display(df_sub)
     plot_envelope(df_sub, iteration)
 end
